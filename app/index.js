@@ -96,7 +96,7 @@ router.post('/history', async (ctx, next) => {
   if (type === 'request') {
     try {
       let [requests, responses] = await Promise.all([
-        Model.Request.findDocuments(queries)
+        Model.Request.findDocuments(queries),
         Model.Response.findDocuments(queries)
       ])
       requests.forEach(request => {
@@ -118,7 +118,9 @@ router.post('/history', async (ctx, next) => {
 
 const root = path.resolve(__dirname, '../www')
 const opts = {}
-app.use(cors())
+app.use(cors({
+  credentials: true
+}))
 app.use(serve(root, opts))
 app.use(KoaBodyParser())
 app.use(json())
