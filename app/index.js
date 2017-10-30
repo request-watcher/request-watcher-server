@@ -73,9 +73,47 @@ router.post('/receiver', (ctx, next) => {
   }
 })
 
-router.post('history', (ctx, next) => {
-  const { appname, username, startTime, endTime, labels, type } = ctx.request.body
+router.post('/history', async (ctx, next) => {
+  let { appname, username, startTime, endTime, labels, type = 'request' } = ctx.request.body
+  const queries = {}
+  if (appname) {
+    queries.appname = appname
+  }
+  if (username) {
+    queries.username = username
+  }
+  if (labels && Array.isArray(labels)) {
+    queries.labels = { $all: labels }
+  }
+  if (startTime && endTime) {
+    queries.createdAt = { $gt: startTime, $lt: endTime }
+  } else if (startTime) {
+    queries.createdAt = { $gt: startTime } 
+  } else if (endTime) {
+    queries.createdAt = { $lt: endTime } 
+  } else { }
 
+  if (type === 'request') {
+    try {
+      let [requests, responses] = await Promise.all([
+        Model.Request.findDocuments(queries)
+        Model.Response.findDocuments(queries)
+      ])
+      requests.forEach(request => {
+        request.response = responses.find(response => response.uuid === request.uuid)
+      })
+      ctx.body = requests
+    } catch (err) {
+      console.log(err)
+    }
+  } else if (type === 'logger') {
+    try {
+      let loggers = Model.Logger.findDocuments(queries)
+      ctx.body = loggers
+    } catch (err) {
+      console.log(err)
+    }
+  }
 })
 
 const root = path.resolve(__dirname, '../www')
