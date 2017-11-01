@@ -82,9 +82,9 @@ router.post('/history', async (ctx, next) => {
   if (username) {
     queries.username = username
   }
-  if (labels && Array.isArray(labels)) {
-    queries.labels = { $all: labels }
-  }
+  // if (labels && Array.isArray(labels)) {
+  //   queries.labels = { $all: labels }
+  // }
   if (startTime && endTime) {
     queries.createdAt = { $gt: startTime, $lt: endTime }
   } else if (startTime) {
@@ -100,7 +100,8 @@ router.post('/history', async (ctx, next) => {
         Model.Response.findDocuments(queries)
       ])
       requests.forEach(request => {
-        request.response = responses.find(response => response.uuid === request.uuid)
+        const response = responses.find(response => response.uuid === request.uuid)
+        request.response = response && response.response
       })
       ctx.body = requests
     } catch (err) {
